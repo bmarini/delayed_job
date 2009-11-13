@@ -1,8 +1,7 @@
 module Delayed
   class Worker
-    @@sleep_delay = 5
-    
     cattr_accessor :sleep_delay
+    @@sleep_delay = 5
 
     cattr_accessor :logger
     self.logger = if defined?(Merb::Logger)
@@ -10,6 +9,9 @@ module Delayed
     elsif defined?(RAILS_DEFAULT_LOGGER)
       RAILS_DEFAULT_LOGGER
     end
+
+    attr_accessor :single_use
+    @single_use = false
 
     # name_prefix is ignored if name is set directly
     attr_accessor :name_prefix
@@ -56,7 +58,7 @@ module Delayed
         break if $exit
 
         if count.zero?
-          sleep(@@sleep_delay)
+          @single_use ? break : sleep(@@sleep_delay)
         else
           say "#{count} jobs processed at %.4f j/s, %d failed ..." % [count / realtime, result.last]
         end
